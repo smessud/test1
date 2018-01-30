@@ -1,0 +1,153 @@
+
+// Statuts divers pour Sites et Emetteurs
+
+enum Codes_Statuts { 
+	CODEP , ETUDE , EN_REALISATION , EN_SERVICE , TEMPORAIREMENT_OFF , EN_TEST , ABANDONNE , DEMONTE
+}
+
+// Un codage pour les types de proprietaires de sites et de supports
+
+enum Codes_Proprietaires_Sites {
+	OPTNC , TDF , PRIVE , COUTUMIER , METEO
+}
+
+// Un codage pour le balisage des pylones
+// Doit être déclaré à l'Agence des Fréquences et à l'Aviation Civile
+
+enum Codes_Balisages {
+	SANS , BLANC , BLANC_ET_ECLAT , VERT , VERT_ET_ECLAT , BLANC_ET_ROUGE , BLANC_ET_ROUGE_ET_ECLAT
+}
+
+// Le Site est une notion foncière 
+
+entity Site {
+	// Informations basiques
+    // Code interne OPT
+    // Le site est-il en service ?
+    Code_Site	String
+    Code_Statut	Codes_Statuts
+    // Identification et Localisation
+    Nom			String
+    Adresse_1 	String
+    Adresse_2 	String
+    Adresse_3 	String
+    Adresse_4 	String
+	X_WGS84		Float
+    Y_WGS84 	Float
+    // Gestion juridique si le proprietaire
+    // n'est pas l'OPT
+    Code_Proprio	Codes_Proprietaires_Sites
+    // URL du SharePoint
+    URL_SharePoint	String
+    // Autres données interessantes à terme
+    // Type d'energie (solaire, concessionnaire)
+    
+}
+
+// Pour le stockage de documents
+// Pas pour une v1, mais utile à terme
+
+enum Types_Documents {
+	CONVENTION , CARTE_COUVERTURE , PLAN_STATION , COURRIER_ANFR , SERVITUDES
+}
+
+entity Document {
+	Type_Document	Types_Documents
+	Document	Blob	
+}
+
+relationship OneToMany {
+	Site to Document
+}
+
+// Pour la gestion juridique
+// si le proprio n'est pas l'OPT
+// la convention doit être renouvelée
+// à une certaine date (tous les dix ans en moyenne)
+
+entity Convention {
+	Reference_document	String
+    Date_de_fin	LocalDate
+}
+
+relationship OneToOne {
+	Site to Convention
+}
+
+// 
+
+enum Codes_Proprietaires_Supports {
+	OPTNC , TDF 
+}
+
+enum Types_Supports {
+	MAT_BETON , MAT_BOIS , MAT_METAL ,
+    TOUR_HERTZIENNE , IMMEUBLE ,
+    PYLONE_AUTOSTABLE , PYLONE_HAUBANNE
+}
+
+entity Support {
+	X_WGS84		Float
+    Y_WGS84 	Float
+    Altitude_au_sol	Float
+    Hauteur	Float
+    
+    Type_Support	Types_Supports
+    Code_Proprio	Codes_Proprietaires_Supports
+    Code_Balisage	Codes_Balisages
+}
+
+enum Types_Hauteurs {
+	HBA , HMA , HHA
+}
+
+entity Antenne {
+	Azimut	Float
+    Diametre	Float
+    Tilt_Mecanique	Float
+    Type_hauteur	Types_Hauteurs
+    Hauteur	Float
+
+}
+
+enum Codes_Services {
+	FH , VHF , FM , RRI , GSM900 , UMTS900 , UMTS2100 , LTE800 , LTE2100
+}
+
+enum Types_Puissances {
+	PIRE , PARE
+}
+
+enum Bandes_Frequences {
+	GSM_900 , UMTS_900 , UMTS_2100, LTE_800 , LTE_2100 , LTE_2600
+}
+
+entity Emetteur {
+	Code_Service	Codes_Services
+	Bande_Frequence	Bandes_Frequences
+    Puissance	Float
+    Type_Puissance	Types_Puissances
+}
+
+enum Unites {
+	KHZ , MHZ , GHZ
+}
+
+entity Frequence_Exacte {
+	Unite	Unites
+    Frequence_Debut	Float
+    Frequence_Fin 	Float
+    Emission_Reception	String
+}
+
+relationship OneToMany {
+	Site to Support
+    Support to Antenne
+  	Antenne to Emetteur
+	Emetteur to Frequence_Exacte
+}
+
+
+    
+// Set pagination options
+
