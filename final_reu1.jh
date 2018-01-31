@@ -1,0 +1,256 @@
+
+// Statuts divers pour Sites et Emetteurs
+enum Codes_Statuts { 
+	CODEP , ETUDE , EN_REALISATION , 
+    EN_SERVICE , TEMPORAIREMENT_OFF , 
+    EN_TEST , ABANDONNE , DEMONTE
+}
+
+// Un codage pour les types de proprietaires de sites
+enum Codes_Proprietaires_Sites {
+	OPTNC , TDF , PRIVE , COUTUMIER , METEO
+}
+
+// Provinces et Communes
+enum Codes_Provinces {
+	NORD , SUD , ILES
+}
+
+entity Commune {
+	Code_Commune_INSEE	Integer
+    Nom					String
+    Code_Province 		Codes_Provinces
+    Code_Postal			Integer
+}
+
+// Le Site est une notion foncière 
+entity Site {
+	// Informations basiques
+    // Code interne OPT
+    // Le site est-il en service ?
+    Code_Site_OPT		String
+    Code_Statut			Codes_Statuts
+    Commentaire			String
+    
+    // Identification et Localisation
+    Lieu_Dit			String
+    Adresse_1 			String
+    Adresse_2 			String
+    Adresse_3 			String
+    Adresse_4 			String
+	X_WGS84				Float
+    Y_WGS84 			Float
+    Code_Commune_INSEE	Integer
+    
+    // Données nécessaires aux déclarations 
+    // ANFR et Aviation Civile
+    Chrono_OPT		Integer
+    Code_Site_ANFR	Integer
+    Date_MES		LocalDate
+    Date_MHS		LocalDate
+    
+    // Gestion juridique si le proprietaire
+    // n'est pas l'OPT
+    Code_Proprio			Codes_Proprietaires_Sites
+    Date_Fin_Convention		LocalDate
+    Reference_Convention	String
+    
+    // URL du SharePoint
+    URL_SharePoint	String
+    
+    // Autres données interessantes à terme
+    // Type d'energie (solaire, concessionnaire)
+}
+
+relationship OneToOne {
+    Site to Commune
+}
+// Fin de spec pour Site
+
+
+// Pour le stockage de documents
+// Pas pour une v1, mais utile à terme
+enum Types_Documents {
+	CONVENTION , CARTE_COUVERTURE , PLAN_STATION , COURRIER_ANFR , SERVITUDES
+}
+
+entity Document {
+	Type_Document	Types_Documents
+	Document	Blob	
+}
+
+relationship OneToMany {
+	Site to Document
+}
+// Fin de spec pour Documents
+
+
+// Spec Supports
+// Les propriétaires les plus classiques
+enum Codes_Proprietaires_Supports {
+	OPTNC , TDF , ETAT , SOCIETE
+}
+
+// Un codage pour la couleur et le balisage des pylones
+// Doit être déclaré à l'Agence Nationale des Fréquences (ANFR)
+// et à l'Aviation Civile
+enum Codes_Balisages {
+	SANS , 
+    BLANC , BLANC_ET_ECLAT , 
+    VERT , VERT_ET_ECLAT , 
+    BLANC_ET_ROUGE , BLANC_ET_ROUGE_ET_ECLAT
+}
+
+// Les types de supports
+// pour déclaration ANFR
+enum Types_Supports {
+	MAT_BETON , MAT_BOIS , MAT_METAL ,
+    TOUR_HERTZIENNE , IMMEUBLE ,
+    PYLONE_AUTOSTABLE , PYLONE_HAUBANNE
+}
+
+entity Support {
+	Code_Support_OPT	String
+    Date_MES			LocalDate
+    Date_MHS			LocalDate
+    Date_Controle_Tech	LocalDate
+    Commentaire			String
+
+	// Données nécessaires pour les déclarations ANFR et Aviation Civile
+	Code_Support_ANFR	Integer
+    X_WGS84				Float
+    Y_WGS84 			Float
+    Altitude_au_sol		Float
+    Hauteur				Float
+    
+    Type_Support		Types_Supports
+    Code_Proprio		Codes_Proprietaires_Supports
+    Code_Balisage		Codes_Balisages
+}
+// Fin de spec Supports
+
+// Spec Antennes
+// Les mesures sont faites selon trois références
+// Hauteur de Bas/Milieu/Haut d'Antenne
+enum Types_Mesures_Hauteurs {
+	HBA , HMA , HHA
+}
+
+// Les fabricants utilisés par l'OPTNC
+enum Codes_Fabricants {
+	KATHREIN , ANDREW , RFS 
+}
+
+// Différentes formes d'antennes
+enum Types_Antennes {
+	PANNEAU , PARABOLIQUE , FOUET , YAGI , GRID
+}
+
+// les caracteristiques des antennes 
+entity Caracteristiques_Antennes {
+	// Code antenne OPT
+	Ref_Antenne_OPT			String
+    
+    // Reference catalogue constructeur
+    Ref_Fabricant			String
+    Fabricant				Codes_Fabricants
+    Type_Antenne			Types_Antennes	
+    Designation				String
+    Diametre_Ou_Longueur	Float
+    Ouverture				Float
+}
+
+
+entity Antenne {
+	// Identification de l'antenne
+    Code_Antenne_OPT	String
+    
+    // Reference interne du type d'antenne 
+    // pour avoir les caracteristiques de l'antenne
+	Ref_Antenne_OPT		String
+	
+    // Azimut : angle horizontal
+	// Tilt : angle vertical	
+    Azimut				Float
+    Tilt_Mecanique		Float
+    Type_hauteur		Types_Mesures_Hauteurs
+    Hauteur				Float
+    Description			String
+    Commentaire			String
+    
+    // Données ANFR
+    Code_Antenne_ANFR	Integer
+}
+
+relationship OneToOne {
+	Antenne{Ref_Antenne_OPT} to Caracteristiques_Antennes{Ref_Antenne_OPT}
+}
+
+// Fin de spec Antennes
+
+// Specs Emetteurs
+// Codes pour types de service radio
+enum Codes_Services {
+	FH , VHF , FM , RRI , 
+    GSM_900 , 
+    UMTS_900 , UMTS_2100 , 
+    LTE_800 , LTE_1800 , LTE_2600
+}
+
+// Type de mesure de puissance rayonnée
+// Isotrope ou Apparente
+enum Types_Puissances {
+	PIRE , PARE
+}
+
+// Bandes de fréquences standardisées
+enum Bandes_Frequences {
+	FH_5GHZ , FH_6GHZ , FH_7GHZ ,
+    VHF ,
+	GSM_900 , UMTS_900 , UMTS_2100, LTE_800 , LTE_2100 , LTE_2600
+}
+
+// 
+entity Emetteur {
+    Code_Emetteur_OPT		String
+    Designation				String
+    Code_Service			Codes_Services
+	Bande_Frequence			Bandes_Frequences
+    Puissance				Float
+    Type_Puissance			Types_Puissances
+    Date_MES				LocalDate
+    Date_MHS				LocalDate
+	Commentaire				String
+    
+    // Pour un emetteur de téléphonie mobile
+    CGI						String
+    
+    // Pour les déclarations ANFR
+    Code_Emetteur_ANFR		Integer
+    Designation_Emission	String
+    Code_Bande_ANFR			Integer
+}
+
+enum Unites {
+	KHZ , MHZ , GHZ
+}
+
+entity Frequence_Exacte {
+	Designation			String
+	Unite				Unites
+    Frequence			Float
+    Emission_Reception	String
+    Commentaire			String
+}
+
+relationship OneToMany {
+	Site to Support
+    Support to Antenne
+  	Antenne to Emetteur
+	Emetteur to Frequence_Exacte
+}
+
+
+    
+// Set pagination options
+
